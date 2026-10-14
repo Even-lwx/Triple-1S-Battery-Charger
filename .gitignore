@@ -1,0 +1,43 @@
+# IAR EWARM build and analysis output
+Debug/
+Release/
+settings/
+*.dep
+*.pbd
+*.pbi
+*.xcl
+*.map
+*.out
+*.d51
+*.lst
+*.o
+*.obj
+*.a
+*.lib
+*.elf
+*.hex
+*.bin
+*.log
+
+# STM32CubeMX generated transient files
+.mxproject
+*.mxproject
+*.launch
+*.su
+
+# IDE/editor and OS files
+.vscode/
+.idea/
+*.user
+*.suo
+*.swp
+*.swo
+Thumbs.db
+Desktop.ini
+
+# Temporary parser reports and local caches
+_reports/
+.cache/
+*.tmp
+*.bak
+*.orig
