@@ -106,8 +106,8 @@ class BoardTests(unittest.TestCase):
         self.assertEqual(f.call('Settings_SetCurrent',1,1),0)
         self.assertEqual(f.programs,4)
         self.assertEqual(f.call('Settings_SetCurrent',1,1),0)
-        self.assertEqual(f.programs,4) # no write when unchanged
-        f.fail_program=6 # payload succeeds, commit fails
+        self.assertEqual(f.programs,4) # 值未变化时不写入
+        f.fail_program=6 # 数据写入成功，但提交失败
         self.assertEqual(f.call('Settings_SetCurrent',2,2),1)
         self.assertEqual(f.call('Board_CurrentMA',2),100)
         image=bytes(f.uc.mem_read(0x0800f000,4096))
@@ -136,7 +136,7 @@ class BoardTests(unittest.TestCase):
         f.fail_program=0
         self.assertEqual(f.call('Settings_SetCurrent',0,1),0)
         f.call('Settings_Restore');self.assertEqual(f.call('Board_CurrentMA',0),500)
-        # Corrupt latest CRC: previous complete record remains usable.
+        # 破坏最新记录的 CRC 后，上一条完整记录仍可使用。
         f.uc.mem_write(0x0800f808,b'\x00'*4)
         f.call('Settings_Restore');self.assertEqual(f.call('Board_CurrentMA',0),1000)
     def test_dividers_gain_reference_and_channel_selection(self):
@@ -150,7 +150,7 @@ class BoardTests(unittest.TestCase):
         self.assertAlmostEqual(rest[0],4200,delta=8)
         self.assertAlmostEqual(rest[3],100,delta=2)
         self.assertEqual(len(f.configured),9)
-        # Channels must be replaced at rank1, never accumulated in a scan mask.
+        # 必须在序位 1 替换通道，不得在扫描掩码中累加通道。
         self.assertEqual(len(set(c[0] for c in f.configured)),9)
         self.assertEqual(len(set(c[1] for c in f.configured)),1)
         self.assertEqual(f.stops,81)
@@ -202,21 +202,21 @@ class BoardTests(unittest.TestCase):
         tick(1600,0)
         tick(1610,4);tick(1639,4)
         self.assertEqual([f.call('Board_CurrentMA',i) for i in range(3)],[100]*3)
-        tick(1640,4);tick(1800,4) # detail, held key must not enter menu
+        tick(1640,4);tick(1800,4) # 详情界面，持续按住按键不能进入菜单
         self.assertEqual(f.uc.mem_read(f.symbols['page'],1),b'\x01')
         time=1900
         def press(key):
             nonlocal time
             tick(time,0);tick(time+30,0);tick(time+40,key);tick(time+70,key);time+=100
-        press(4) # menu
-        press(4) # current editor
-        press(2) # pending500, not applied
+        press(4) # 菜单
+        press(4) # 电流编辑界面
+        press(2) # 待应用值为 500，尚未生效
         self.assertEqual(f.call('Board_CurrentMA',0),100)
-        press(8) # cancel
+        press(8) # 取消
         self.assertEqual(f.call('Board_CurrentMA',0),100)
-        press(4);press(2);press(4) # reopen,500,apply
+        press(4);press(2);press(4) # 重新打开，选择 500 并应用
         self.assertEqual(f.call('Board_CurrentMA',0),500)
-        press(4);press(2);press(4) # menu,all100,apply
+        press(4);press(2);press(4) # 菜单中将所有通道设为 100 并应用
         self.assertEqual([f.call('Board_CurrentMA',i) for i in range(3)],[100]*3)
     def test_voltage_proxy_bounds_and_monotonicity(self):
         f=Firmware()
@@ -245,12 +245,12 @@ class BoardTests(unittest.TestCase):
         self.assertEqual(lights(3000),[0]*3)
         self.assertEqual(lights(3500),[1]*3)
         sample(4000,9);sample(33000,9)
-        self.assertEqual(lights(33500),[1]*3) # not yet30s
+        self.assertEqual(lights(33500),[1]*3) # 尚未达到 30 秒
         sample(34000,9);self.assertEqual(lights(34500),[0]*3)
-        # Empty has priority over the previous full estimate; no sticky full.
+        # 空插座判断优先于先前的满电估计，不能保持满电状态。
         sample(35000,1);sample(38000,1)
         self.assertEqual(lights(38000),[1]*3)
-        # Reinsertion at4.2V/low current must not immediately claim full.
+        # 重新插入 4.2 V、低电流的电池时，不能立即宣称满电。
         sample(40000,5);sample(80000,5)
         self.assertEqual(lights(80000),[1]*3)
         sample(81000,100);sample(83000,100)

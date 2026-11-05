@@ -10,7 +10,7 @@ const char *board_stage = "RESET/CLOCK";
 static const uint16_t control_pins[3] = {GPIO_PIN_10, GPIO_PIN_11, GPIO_PIN_12};
 static ChargeMode current_mode[3];
 
-/* Main-loop only. Finite timeout: no printf retargeting or IRQ logging. */
+/* 仅允许主循环调用。使用有限超时，不进行 printf 重定向或中断日志输出。 */
 HAL_StatusTypeDef Board_Log(const char *format, ...)
 {
     char text[224]; int n; va_list args; HAL_StatusTypeDef status;
@@ -43,14 +43,14 @@ HAL_StatusTypeDef Board_GPIO_Init(void)
     HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2, GPIO_PIN_RESET);
     g.Pin = GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3; g.Mode = GPIO_MODE_OUTPUT_PP;
     g.Speed = GPIO_SPEED_FREQ_LOW; HAL_GPIO_Init(GPIOD, &g);
-    /* PB4..7 are active-low keys with external pullups. PB7 MUST NOT be driven. */
+    /* PB4～PB7 是带外部上拉的低有效按键，PB7 绝不能被配置为输出。 */
     g.Pin = GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7; g.Mode = GPIO_MODE_INPUT;
     HAL_GPIO_Init(GPIOB, &g);
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8 | GPIO_PIN_9, GPIO_PIN_SET);
     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_SET);
     g.Pin = GPIO_PIN_8 | GPIO_PIN_9; g.Mode = GPIO_MODE_OUTPUT_PP; HAL_GPIO_Init(GPIOB, &g);
     g.Pin = GPIO_PIN_13; HAL_GPIO_Init(GPIOC, &g);
-    /* BQ24040 ISET2 floating = 100 mA limit, not disabled. No internal pull. */
+    /* BQ24040 的 ISET2 悬空表示 100 mA 限流，并非关闭；不要启用内部上下拉。 */
     g.Pin = GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12; g.Mode = GPIO_MODE_INPUT;
     HAL_GPIO_Init(GPIOB, &g);
     if ((GPIOB->MODER & 0x03FFFF00UL) != 0x00050000UL ||
@@ -63,7 +63,7 @@ BoardResult Board_SetCurrent(unsigned channel, ChargeMode mode)
     if (channel >= 3 || (unsigned)mode > CHARGE_1000MA) return BOARD_ERROR;
     g.Pin = control_pins[channel]; g.Pull = GPIO_NOPULL; g.Speed = GPIO_SPEED_FREQ_LOW;
     g.Mode = mode == CHARGE_100MA ? GPIO_MODE_INPUT : GPIO_MODE_OUTPUT_PP;
-    /* Enter float directly: pulling low first would briefly select the1A setting. */
+    /* 直接进入悬空状态：先拉低会短暂选择 1 A 档位。 */
     if (mode != CHARGE_100MA)
         HAL_GPIO_WritePin(GPIOB, g.Pin, mode == CHARGE_500MA ? GPIO_PIN_SET : GPIO_PIN_RESET);
     HAL_GPIO_Init(GPIOB, &g);
@@ -101,7 +101,7 @@ static HAL_StatusTypeDef read_channel(uint32_t channel, uint16_t *value)
     ADC_ChannelConfTypeDef c = {0}; uint32_t sum = 0; unsigned i; HAL_StatusTypeDef s;
     c.Channel = channel; c.Rank = ADC_REGULAR_RANK_1; c.SamplingTime = ADC_SAMPLINGTIME_COMMON_1;
     s = HAL_ADC_ConfigChannel(&hadc1, &c); if (s != HAL_OK) return s;
-    /* VREFINT buffer settling and external RC/channel switching settling. */
+    /* VREFINT 缓冲器稳定时间，以及外部 RC 和通道切换稳定时间。 */
     HAL_Delay(1);
     for (i = 0; i < 9; i++) {
         s = HAL_ADC_Start(&hadc1); if (s != HAL_OK) return s;
@@ -131,13 +131,13 @@ HAL_StatusTypeDef Board_Sample(BoardTelemetry *sample)
         s = read_channel(channels[i], &t.raw[i]); if (s != HAL_OK) return s;
     }
     for (i = 0; i < 3; i++) {
-        /* Rupper=47k, Rlower=10k. INA180A3 gain100, shunt30mohm => 3mV/mA. */
+        /* 上臂电阻为 47k，下臂为 10k；INA180A3 增益为 100，分流电阻为 30 毫欧，对应 3 mV/mA。 */
         t.battery_mv[i] = ((uint32_t)t.raw[2*i] * t.vdda_mv * 57U + 20475U) / 40950U;
         t.current_ma[i] = ((uint32_t)t.raw[2*i+1] * t.vdda_mv + 6142U) / 12285U;
-        /* Rail saturation: measurement is not trustworthy; do not present as valid. */
+        /* 电源轨饱和时测量不可靠，不要将结果标记为有效。 */
         if (t.raw[2*i+1] >= 4080) return HAL_ERROR;
     }
-    /* Input divider100k/47k; PA6 after1k filter. PA7 left raw until NTC curve confirmed. */
+    /* 输入分压为 100k/47k，PA6 经过 1k 滤波；NTC 曲线确认前，PA7 保留原始值。 */
     t.input_mv = (uint32_t)(((uint64_t)t.raw[6] * t.vdda_mv * 147U + 96232U) / 192465U);
     if (t.raw[6] >= 4080) return HAL_ERROR;
     t.valid = 1; *sample = t; return HAL_OK;

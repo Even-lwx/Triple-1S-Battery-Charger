@@ -1,7 +1,7 @@
 #include "board.h"
-/* User measured empty socket ~1mA. These are provisional thresholds requiring
- * board calibration. Full is only a heuristic; no CHG or presence input exists.
- * <=3mA is always treated as empty, even if a full cell has the same current.
+/* 用户测得空插座电流约为 1 mA。以下为临时阈值，仍需
+ * 在实板上校准。满电仅是估计结果，没有 CHG 或电池在位输入。
+ * 电流不超过 3 mA 时始终视为空插座，即使满电电池也可能出现相同电流。
  */
 #define EMPTY_MA 3U
 #define ACTIVE_MA 8U
@@ -39,7 +39,7 @@ void ChargeLED_Sample(const BoardTelemetry *data,uint32_t now)
         else if (c->charged && data->battery_mv[i]>=4150 && ma<=taper) {
             target=LED_STEADY; dwell=FULL_MS;
         } else if (ma>=ACTIVE_MA) { target=LED_BLINK; dwell=2000; }
-        else { c->timing=0; continue; } /* hysteresis band, preserve indication */
+        else { c->timing=0; continue; } /* 滞回区间内保持当前指示 */
         if (target==c->mode) { c->timing=0; continue; }
         if (!c->timing || c->candidate!=target) {
             c->candidate=target; c->since=now; c->timing=1;

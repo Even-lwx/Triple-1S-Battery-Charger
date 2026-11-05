@@ -1,10 +1,10 @@
 #include "settings.h"
-/* STM32G031:2KB erase pages,64-bit programming. Main loop only.
- * Each16-byte record is programmed once, payload first, CRC/commit last.
- * Never erase the page containing the latest valid record before committing
- * a replacement on the other page. Invalid/torn records are never reused.
+/* STM32G031 的擦除页为 2 KB，编程宽度为 64 位；仅允许主循环调用。
+ * 每条 16 字节记录只编程一次，先写数据，最后写 CRC 和提交标志。
+ * 在另一页成功提交替代记录之前，不得擦除
+ * 包含最新有效记录的页面。无效或写入中断的记录槽不再复用。
  */
-#define TAG 0x43530100UL /* format1, packed three2-bit modes in low byte */
+#define TAG 0x43530100UL /* 格式 1，低字节中打包三个 2 位模式 */
 #define COMMIT 0x434F4D31UL
 #define RECORD_SIZE 16U
 typedef struct { uint32_t sequence, payload, crc, commit; } Record;
@@ -47,7 +47,7 @@ static HAL_StatusTypeDef save(uint32_t packed)
     HAL_StatusTypeDef s; FLASH_EraseInitTypeDef erase={0}; Record record;
     if (last.found && last.packed==packed) return HAL_OK;
     page=last.found ? last.address&~(FLASH_PAGE_SIZE-1U) : SETTINGS_BASE;
-    /* Start after latest record. Even failed records consume a slot. */
+    /* 从最新记录之后开始写入，失败记录也占用一个槽位。 */
     for (addr=last.found ? last.address+RECORD_SIZE : page;addr<page+FLASH_PAGE_SIZE;addr+=RECORD_SIZE)
         if (blank(addr)) break;
     s=HAL_FLASH_Unlock(); if (s!=HAL_OK) return s;
@@ -82,7 +82,7 @@ HAL_StatusTypeDef Settings_Restore(void)
 static BoardResult apply(uint32_t packed)
 {
     unsigned i;
-    /* Persist first: save failure leaves GPIO/settings unchanged and UI editor open. */
+    /* 先保存：保存失败时保持 GPIO 和设置不变，并停留在编辑界面。 */
     if (save(packed)!=HAL_OK) return BOARD_ERROR;
     for (i=0;i<3;i++) if (Board_SetCurrent(i,(ChargeMode)((packed>>(2*i))&3U))!=BOARD_OK) return BOARD_ERROR;
     return BOARD_OK;

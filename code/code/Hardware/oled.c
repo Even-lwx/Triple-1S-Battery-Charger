@@ -2,7 +2,7 @@
 #include "spi.h"
 #include <string.h>
 static uint8_t buffer[1024];
-/* 5x7 uppercase ASCII glyphs (digits, A-Z, -, :, .). */
+/* 5×7 大写 ASCII 字模，包含数字、A～Z、短横线、冒号和小数点。 */
 static const char alphabet[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-:.%/+<>?";
 static const uint8_t glyphs[][5] = {
  {62,81,73,69,62},{0,66,127,64,0},{66,97,81,73,70},{33,65,69,75,49},
@@ -39,7 +39,7 @@ void OLED_Pixel(int x, int y, int on)
 void OLED_Box(int x, int y, int width, int height, int filled)
 {
     int i,j;
-    /* Bound loop costs even if caller supplies invalid coordinates. */
+    /* 即使调用者提供无效坐标，也限制循环开销。 */
     if (width <= 0 || height <= 0 || width > 128 || height > 64) return;
     for (j=0;j<height;j++) for (i=0;i<width;i++)
         if (filled || i==0 || j==0 || i==width-1 || j==height-1) OLED_Pixel(x+i,y+j,1);
@@ -93,8 +93,8 @@ HAL_StatusTypeDef OLED_Update(void)
 }
 HAL_StatusTypeDef OLED_Init(void)
 {
-    /* SSD1306 Rev1.1 sections9/10; SPI mode0,1MHz,128x64,page addressing.
-     * Transfer success is NOT a display-presence or controller-identity test.
+    /* 依据 SSD1306 第 1.1 版第 9、10 节，使用 SPI 模式 0、1 MHz、128×64、页寻址。
+     * 传输成功不代表已检测到显示屏或确认控制器型号。
      */
     static const uint8_t commands[] = {0xAE,0xD5,0x80,0xA8,0x3F,0xD3,0x00,0x40,
 #if OLED_SH1106

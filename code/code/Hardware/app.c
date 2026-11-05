@@ -20,7 +20,7 @@ static void keys_tick(void)
     if (now != key_candidate) { key_candidate = now; key_changed = tick; }
     if (now == key_stable || (uint32_t)(tick-key_changed) < 30U) return;
     pressed = (uint8_t)(now & ~key_stable); key_stable = now;
-    /* Ignore ambiguous simultaneous presses; BACK has cancellation priority. */
+    /* 同时按下多个按键时忽略结果；BACK 具有取消优先级。 */
     if (pressed & UI_BACK) UI_Key(UI_BACK);
     else if (pressed==UI_UP || pressed==UI_DOWN || pressed==UI_OK) UI_Key(pressed);
     redraw=1;
@@ -71,7 +71,7 @@ void App_Tick(void)
         redraw=1;
     }
     ChargeLED_Tick(now);
-    /* 10Hz animation independent of the1Hz measurement cadence; no boot delays. */
+    /* 10 Hz 动画独立于 1 Hz 测量周期，不增加启动延时。 */
     if (oled_ready && (redraw || (uint32_t)(now-rendered)>=100U)) {
         rendered=now; redraw=0;
         UI_Draw(&telemetry,now);

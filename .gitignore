@@ -1,4 +1,4 @@
-# IAR EWARM build and analysis output
+# IAR EWARM 编译和分析输出
 Debug/
 Release/
 settings/
@@ -19,13 +19,13 @@ settings/
 *.bin
 *.log
 
-# STM32CubeMX generated transient files
+# STM32CubeMX 生成的临时文件
 .mxproject
 *.mxproject
 *.launch
 *.su
 
-# IDE/editor and OS files
+# 集成开发环境、编辑器和操作系统文件
 .vscode/
 .idea/
 *.user
@@ -35,13 +35,13 @@ settings/
 Thumbs.db
 Desktop.ini
 
-# Temporary parser reports and local caches
+# 临时解析报告和本地缓存
 _reports/
 .cache/
 *.tmp
 *.bak
 *.orig
-# OS/editor noise
+# 操作系统和编辑器临时文件
 .DS_Store
 Thumbs.db
 desktop.ini
@@ -51,7 +51,7 @@ desktop.ini
 *.bak
 ~$*
 
-# Generated Altium and Keil files
+# Altium 和 Keil 生成的文件
 **/History/
 **/__Previews/
 **/Project Logs*/

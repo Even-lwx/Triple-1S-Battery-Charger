@@ -88,7 +88,7 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  /* UART before other peripherals; pre-UART failures remain in board_fault. */
+  /* 先初始化串口再初始化其他外设；串口就绪前的故障保存在 board_fault 中。 */
   board_stage = "USART1";
   if (MX_USART1_UART_Init() != HAL_OK) Error_Handler();
   Board_InitResult("USART1 115200 8N1", HAL_OK);

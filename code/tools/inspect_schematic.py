@@ -16,7 +16,7 @@ while offset < len(data):
     offset += size
     records.append(dict(item.split('=', 1) for item in raw.decode('utf-8', 'replace').split('|') if '=' in item))
 
-# OwnerIndex excludes the initial file header record.
+# OwnerIndex 不计入起始文件头记录。
 components = {}
 for index, record in enumerate(records[1:]):
     if record.get('RECORD') == '1':
@@ -51,8 +51,8 @@ for wire in wires:
     ps = [(int(wire.get('X%d' % i, 0)), int(wire.get('Y%d' % i, 0))) for i in range(1, int(wire['LocationCount']) + 1)]
     points.update(ps)
     segments.extend(zip(ps, ps[1:]))
-# Join segment endpoints and anchors on each segment; crossing interiors alone
-# are not joined without a junction/endpoint.
+# 连接每段导线上的端点和锚点；仅在内部交叉的导线，
+# 如果没有连接点或端点，则不视为连通。
 points.update(point(r) for r in records if r.get('RECORD') == '29')
 for a, b in segments:
     join(a, b)

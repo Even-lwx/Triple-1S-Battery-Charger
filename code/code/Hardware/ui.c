@@ -2,9 +2,9 @@
 #include "oled.h"
 #include "settings.h"
 #include <stdio.h>
-/* 4.2V lithium voltage proxy only; no fuel gauge, OCV rest or capacity model.
- * Charging IR rise and chemistry differences can substantially bias this bar.
- * It never asserts battery presence, charge termination or measured SOC.
+/* 仅根据 4.2 V 锂电池电压估计电量，没有电量计、开路静置测量或容量模型。
+ * 充电内阻压升和化学体系差异可能使电量条产生明显偏差。
+ * 电量条不用于确认电池在位、充电终止或实测荷电状态。
  */
 int UI_VoltagePercent(uint32_t mv)
 {
@@ -15,7 +15,7 @@ int UI_VoltagePercent(uint32_t mv)
     if (mv <= volts[0]) return 0;
     for (i=1;i<10;i++) if (mv <= volts[i])
         return percent[i-1]+(int)((mv-volts[i-1])*(percent[i]-percent[i-1])/(volts[i]-volts[i-1]));
-    return 99; /* Voltage alone never proves 100% / termination. */
+    return 99; /* 仅凭电压不能证明电量达到 100% 或充电已终止。 */
 }
 typedef enum { HOME, DETAIL, MENU, CURRENT, INFO } Page;
 static Page page;
@@ -29,7 +29,7 @@ void UI_Init(uint32_t now)
 }
 void UI_Key(unsigned key)
 {
-    if (booting) { booting=0; return; } /* Skip animation, consume key. */
+    if (booting) { booting=0; return; } /* 跳过动画并消耗本次按键事件。 */
     action_failed=0;
     if (key==UI_BACK) {
         if (page==CURRENT || page==INFO) page=MENU;
@@ -120,7 +120,7 @@ static void detail(const BoardTelemetry *d,uint32_t now)
     else if (pct<0) snprintf(text,sizeof(text),"CHECK BATTERY VOLTAGE");
     else snprintf(text,sizeof(text),"V-EST");
     OLED_Text(3,44,text,1);
-    /* Preset remains visible even when ADC/input/battery warnings are present. */
+    /* 即使出现 ADC、输入或电池警告，也保留预设值显示。 */
     snprintf(text,sizeof(text),"SET %uMA",Board_CurrentMA(selected));
     OLED_Text(50,28,text,1);
     footer("OK:MENU      BK:HOME");
