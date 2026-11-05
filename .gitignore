@@ -41,3 +41,32 @@ _reports/
 *.tmp
 *.bak
 *.orig
+# OS/editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*.tmp
+*.bak
+~$*
+
+# Generated Altium and Keil files
+**/History/
+**/__Previews/
+**/Project Logs/
+**/Project Outputs/
+**/Objects/
+**/Listings/
+**/DebugConfig/
+**/RTE/
+**/*.uvoptx
+**/*.uvguix*
+**/*.axf
+**/*.elf
+**/*.hex
+**/*.bin
+**/*.map
+**/*.lst
+**/*.log
+**/_reports/
