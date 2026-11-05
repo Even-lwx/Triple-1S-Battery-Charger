@@ -54,8 +54,8 @@ desktop.ini
 # Generated Altium and Keil files
 **/History/
 **/__Previews/
-**/Project Logs/
-**/Project Outputs/
+**/Project Logs*/
+**/Project Outputs*/
 **/Objects/
 **/Listings/
 **/DebugConfig/
